@@ -1,13 +1,14 @@
 import type { NextConfig } from "next";
 
-// GitHub Pages'te klasör ismimiz
 const repoName = 'sametcolak-portfolio';
+// GitHub Actions'da hangi branşta olduğumuzu anlamak için (Opsiyonel ama garanti)
+const isStaging = process.env.GITHUB_REF_NAME === 'dev';
 
 const nextConfig: NextConfig = {
   output: 'export',
-  // Sadece build sırasında (GitHub'da) bu yolları kullan
-  basePath: process.env.NODE_ENV === 'production' ? `/${repoName}` : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? `/${repoName}/` : '',
+  // Eğer staging (dev) ise path: /repo/dev, değilse (main) : /repo
+  basePath: isStaging ? `/${repoName}/dev` : `/${repoName}`,
+  assetPrefix: isStaging ? `/${repoName}/dev/` : `/${repoName}/`,
   images: {
     unoptimized: true,
   },
