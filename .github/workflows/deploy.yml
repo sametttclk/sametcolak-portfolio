@@ -2,7 +2,7 @@ name: Deploy Portfolio
 
 on:
   push:
-    branches: ["main", "dev"] # İki branch de tetiklesin
+    branches: ["main", "dev"]
 
 permissions:
   contents: read
@@ -12,11 +12,8 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    # Burası kritik: GitHub'ın "Pages" ortamını kullanacağını belirtiyoruz
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-      
     steps:
       - uses: actions/checkout@v4
       
@@ -31,28 +28,25 @@ jobs:
 
       - name: Build with Next.js
         run: npm run build
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
 
-      # KRİTİK NOKTA: Eğer dev branchindeysek çıktıları /dev klasörüne koy
-      - name: Organize Build for Staging
+      # BU KISIM ÇOK KRİTİK: Mevcut deployment'ı bozmadan klasör oluşturur
+      - name: Prepare Deployment Directory
         run: |
+          mkdir -p final-deploy
           if [ "${{ github.ref_name }}" == "dev" ]; then
-            mkdir -p staging-dist/dev
-            cp -r out/* staging-dist/dev/
-            echo "DEPLOY_PATH=staging-dist" >> $GITHUB_ENV
+            mkdir -p final-deploy/dev
+            cp -r out/* final-deploy/dev/
           else
-            echo "DEPLOY_PATH=out" >> $GITHUB_ENV
+            cp -r out/* final-deploy/
           fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{ env.DEPLOY_PATH }}
+          path: final-deploy  # Sadece out değil, hazırladığımız klasörü yüklüyoruz
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: Build with Next.js
-        run: npm run build
-        env:
-          GITHUB_REF_NAME: ${{ github.ref_name }} # Branş adını Next.js'e gönderiyoruz
