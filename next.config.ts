@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
+// GitHub Pages'te klasör ismimiz
+const repoName = 'sametcolak-portfolio';
+
 const nextConfig: NextConfig = {
-  output: 'export', // Statik site çıktısı için şart
-  basePath: '/sametcolak-portfolio',
-  assetPrefix: '/sametcolak-portfolio', // CSS ve JS yollarını düzeltir
+  output: 'export',
+  // Sadece build sırasında (GitHub'da) bu yolları kullan
+  basePath: process.env.NODE_ENV === 'production' ? `/${repoName}` : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? `/${repoName}/` : '',
   images: {
-    unoptimized: true, // GitHub Pages görsel optimizasyonunu desteklemez
+    unoptimized: true,
   },
 };
 

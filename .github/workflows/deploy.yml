@@ -1,0 +1,48 @@
+name: Deploy Portfolio
+
+on:
+  push:
+    branches: ["main", "dev"] # İki branch de tetiklesin
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build with Next.js
+        run: npm run build
+
+      # KRİTİK NOKTA: Eğer dev branchindeysek çıktıları /dev klasörüne koy
+      - name: Organize Build for Staging
+        run: |
+          if [ "${{ github.ref_name }}" == "dev" ]; then
+            mkdir -p staging-dist/dev
+            cp -r out/* staging-dist/dev/
+            echo "DEPLOY_PATH=staging-dist" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_PATH=out" >> $GITHUB_ENV
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.DEPLOY_PATH }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
